@@ -1,22 +1,34 @@
-# orbit systems c language style guide
+# Orbit Systems C Language Style Guide
 
-## indentation
-indentation should use 4 spaces per level.
+## C Standard
 
-control flow statements with a single statement body should reside on the same line, or inside of a block (preferably the latter if the line is too long):
+All official Orbit Systems projects written in C should use the **C23 standard**. No, you can't change my mind.
+
+## Control Flow
+Indentation should use 4 spaces per level.
+
+Control flow statements should always have their body enclosed in a statement block, with K&R-style bracketing.
 ```c
-if (x == y) return 1;
-
+// yes!
 if (x == y) {
+    return 1;
+}
+
+// nope
+if (x == y)
+{
     return 1;
 }
 
 // no
 if (x == y)
     return 1;
+
+// please no
+if (x == y) return 1;
 ```
 
-`case`s should match the level of their enclosing `switch`:
+`case`s should match the level of their enclosing `switch`,
 ```c
 switch (x) {
 case 1:
@@ -27,67 +39,88 @@ case 2:
 }
 ```
 
-## case
-- use `snake_case` for variables, functions, and structure fields.
-- use `PascalCase` for new types.
-- use `SCREAMING_SNAKE_CASE` for `#define`'d constants and enums.
-- macros should also use this case, but some exceptions are made for keyword mods like `for_range` that supplement language features, or inline function spoofing
+...*unless* a variable is defined in a switch case, then enclose the case in a block with the final `break` outside of the block, and
+indent cases one level above the enclosing `switch`.
+The closing brace of the block should be in the same level of the `case` label.
 
-## comments
-prefer line comments (`// this`) in almost every case, except when a large
+If a case returns at the end of the block, the break should be omitted and the return statement should be inside the block.
+
+```c
+switch (x) {
+    case 1: {
+        int y = 100;
+    } break;
+    case 1: {
+        int y = 100;
+        return y;
+    }
+    case 2:
+        return bar;
+}
+```
+
+## Spelling
+- Use `snake_case` for variables, functions, and structure fields.
+- Use `TitleCase` for new types.
+- Use `SCREAMING_SNAKE_CASE` for enum variants and `#define`'d constants.
+- Macros should also use `SCREAMING_SNAKE_CASE`, but some exceptions are made for keyword mods like `for_n` that supplement language features, or inline function spoofing.
+
+## Comments
+Prefer line comments (`// this`) in almost every case, except when a large
 multi-line description is needed.
 
-
-## types
-use `orbit.h` defined types whenever possible, especially in data structures.
+## Types
+Use `common/type.h` types whenever possible, especially in user-defined types.
 ```rs
 i8, i16, i32, i64, isize // integers
 u8, u16, u32, u64, usize // unsigned integers
-f16, f32, f64 // floating point
-bool // boolean
+f32, f64 // floating point
 ```
 when the size of an integer doesn't matter, prefer `isize` and `usize` over `int`.
 
-### structs
-when declaring a struct type, use typedef and include the name in the struct definition:
+### Structs/Unions
+When declaring a struct or union type, use typedef and include the name in the definition twice:
 ```c
 typedef struct MyStruct {
     // ...
 } MyStruct;
 ```
 
-if it's necessary to refer to that type before the definition is available/complete, use a predeclaration:
+If it's necessary to refer to that type before the definition is available/complete, use a predeclaration and a simple declarations after:
 ```c
 typedef struct MyStruct MyStruct;
+
+// ...
+
+struct MyStruct {
+    // ...
+};
 ```
 
-### enums
-when storing an enum in a data structure, ***always*** use a sized integer type.
-
-Although not required, enums may have a type name for a better experience in debuggers like GDB.
+### Enums
+**Always** use `typedef` when creating a new enum type, and **always** give the enum an explicit backing type.
 ```c
-enum TokenKind {
+typedef enum : u8 {
     TOKEN_PLUS,
     TOKEN_MINUS,
     TOKEN_NUMBER,
-};
+} TokenKind;
 
 typedef struct Token {
-    // not TokenKind, cause sizeof(TokenKind) == sizeof(int), which wastes space
-    u8 kind; 
+    TokenKind kind;
 } Token;
 ```
 
-### pointers
-pointer types, in declarations and parameters, should have the `*` attached to the subtype:
+### Pointers
+Pointer types, in declarations and parameters, should have the `*` attached to the subtype:
 ```c
 int* xptr = &x;
 
 void modify(int* ptr);
 ```
 
-## declarations & assignments
-never declare or set more than one variable in a single statement.
+## Declarations & Assignments
+**Never** declare or assign more than one variable in a single statement.
 ```c
 // nuh uh
 int x, y, z = 1;
@@ -98,7 +131,7 @@ int y;
 int z = 1;
 ```
 
-extract long expressions out to variables if they're re-used at all.
+Extract long expressions out to variables if they're commonly re-used.
 ```c
 // bad
 if (expr.as_binop->rhs.type == expr.as_binop->lhs.type) {
@@ -115,5 +148,15 @@ if (rhs.type == lhs.type) {
 }
 ```
 
-## headers
-headers should use `#pragma once` instead of `#ifdef` guards.
+## Headers
+Use `#ifdef` guards with the form:
+```
+#ifndef HEADERNAME_H
+#define HEADERNAME_H
+
+// ...
+
+#endif // HEADERNAME_H
+```
+
+Do not use `#pragma once`.

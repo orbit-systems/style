@@ -8,26 +8,34 @@ SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
 SpaceBeforeParens: ControlStatements
 BreakBeforeBraces: Attach
+AlwaysBreakBeforeMultilineStrings: true
 
-AlignArrayOfStructures: Left
 AlignAfterOpenBracket: BlockIndent
+AlignConsecutiveAssignments: false
+AlignConsecutiveBitFields: false
+AlignEscapedNewlines: LeftWithLastLine
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
 
 LineEnding: LF
 MaxEmptyLinesToKeep: 1
-AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortIfStatementsOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: None
 AllowShortBlocksOnASingleLine: Never
-AllowShortLoopsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 
-ColumnLimit: 0
-# ^^^ dont abuse this please 
-# if a line is too long, i count on you to fix it yourself... for now
+ColumnLimit: 80
+# prefer 80 columns, with some leeway
 
 IncludeBlocks: Preserve
-SortIncludes: false # oh my god this one caused so many headaches
+SortIncludes: false
 
 PointerAlignment: Left
 QualifierAlignment: Left
 RemoveSemicolon: true
+InsertNewlineAtEOF: true
+
+ForEachMacros: [for_n]
