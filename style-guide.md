@@ -28,6 +28,37 @@ if (x == y)
 if (x == y) return 1;
 ```
 
+If a large condition is needed, factor it out into a function or indent it like so:
+```c
+// yes!
+if (xxxxxxxxxxx &&
+    yyyyyyyyy &&
+    zzzzzzzzz
+) {
+    return 1;
+}
+
+// no, hard to tell where the statement block starts
+if (xxxxxxxxxxx &&
+    yyyyyyyyy &&
+    zzzzzzzzz) {
+    return 1;
+}
+```
+
+When checking for null or for zero inside a condition, always explicitly check, rather than relying on C 'truthiness':
+```c
+// if (ptr) becomes:
+if (ptr != nullptr) {
+    return 1;
+}
+
+// if (!ch) becomes:
+if (ch != '\0') {
+    return 1;
+}
+```
+
 `case`s should match the level of their enclosing `switch`,
 ```c
 switch (x) {
@@ -36,6 +67,13 @@ case 1:
     break;
 case 2:
     return bar;
+case 3:
+    x = 200
+    // always annotate fallthrough
+    [[fallthrough]];
+case 4:
+    break;
+
 }
 ```
 
@@ -77,6 +115,11 @@ u8, u16, u32, u64, usize // unsigned integers
 f32, f64 // floating point
 ```
 when the size of an integer doesn't matter, prefer `isize` and `usize` over `int`.
+
+### Strings
+For storing or passing strings (unless needed by a stdlib function), always prefer storing or passing a length along with it instead 
+of implicitly relying on it being null-terminated.
+Use the `string` type from `common/str.h` whenever possible.
 
 ### Structs/Unions
 When declaring a struct or union type, use typedef and include the name in the definition twice:
