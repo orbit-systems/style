@@ -4,7 +4,73 @@
 
 All official Orbit Systems projects written in C should use the **C23 standard**. No, you can't change my mind.
 
+### GNU Extensions
+
+GNU Extensions are allowed, as long as they work both in GCC and Clang.
+
+## Headers
+
+### Ifdef Guards
+
+Use `#ifdef` guards with the form:
+```
+#ifndef HEADERNAME_H
+#define HEADERNAME_H
+
+// ...
+
+#endif // HEADERNAME_H
+```
+
+Do not use `#pragma once`.
+
+### Only include something if you use it
+
+Only include a header if you need some functionality from that header.
+
+## Functions
+
+### Use descriptive names for functions, with module information
+
+Always use a descriptive name for a function, like `fe_chain_append_begin`, rather than `chain_begin`.
+
+Include locality information about where this function comes from. If it comes from a project (like Iron), follow the module naming convention, so `fe_chain_append_begin`, rather than `chain_append_begin`.
+
+### Always _always_ include parameter names!
+
+It is not 1983 now. Please include parameter names in your functions!
+
+`void some_function(u8 arg1, void* arg2)` rather than `void some_function(u8, void*)`. This also holds true for function pointers, even if functions pointed to by that pointer do not follow the same naming convention.
+
+### Signatures should match everywhere
+
+Signatures should always match across all c files and headers.
+
+## Macros (don't be scared!)
+
+### Common conventions
+
+Macros should always follow `SCREAMING_CASE`, and should only be used for ease-of-maintainability (e.g X-macros), and simple syntax modification (like vec for). Do not add a hard dependency on your own version of Metalang99.
+
+### X-macros
+
+When using the X macro idiom, do not just define it as "X", give it a descriptive name.
+
+```c
+#define OPCODE_LIST \
+    OPCODE(ABC, "123") \
+    OPCODE(DEF, "456")
+
+char* opcode_mapping[] = {
+    #define OPCODE(name, value) [name] = value,
+        OPCODE_LIST
+    #undef OPCODE
+}
+```
+
 ## Control Flow
+
+### Indentation and style
 Indentation should use 4 spaces per level.
 
 Control flow statements should always have their body enclosed in a statement block, with K&R-style bracketing.
@@ -28,6 +94,59 @@ if (x == y)
 if (x == y) return 1;
 ```
 
+`case`s should match the level of their enclosing `switch`,
+```c
+switch (x) {
+case 1:
+    x = 100;
+    break;
+case 2:
+    return bar;
+case 3:
+    x = 200
+    [[fallthrough]];
+case 4:
+    break;
+
+}
+```
+
+### Fallthrough
+
+Fallthrough should not be implicit on switch statement cases.
+
+```c
+//bad
+switch (x) {
+case 1:
+    x = 100;
+    break;
+case 2:
+    return bar;
+case 3:
+    x = 200
+case 4:
+    break;
+}
+
+//good
+switch (x) {
+case 1:
+    x = 100;
+    break;
+case 2:
+    return bar;
+case 3:
+    x = 200
+    [[fallthrough]];
+case 4:
+    break;
+}
+```
+
+
+
+### Layout and complexity
 If a large condition is needed, factor it out into a function or indent it like so:
 ```c
 // yes!
@@ -46,6 +165,7 @@ if (xxxxxxxxxxx &&
 }
 ```
 
+### Verbosity
 When checking for null or for zero inside a condition, always explicitly check, rather than relying on C 'truthiness':
 ```c
 // if (ptr) becomes:
@@ -56,24 +176,6 @@ if (ptr != nullptr) {
 // if (!ch) becomes:
 if (ch != '\0') {
     return 1;
-}
-```
-
-`case`s should match the level of their enclosing `switch`,
-```c
-switch (x) {
-case 1:
-    x = 100;
-    break;
-case 2:
-    return bar;
-case 3:
-    x = 200
-    // always annotate fallthrough
-    [[fallthrough]];
-case 4:
-    break;
-
 }
 ```
 
@@ -119,7 +221,7 @@ when the size of an integer doesn't matter, prefer `isize` and `usize` over `int
 ### Strings
 For storing or passing strings (unless needed by a stdlib function), always prefer storing or passing a length along with it instead 
 of implicitly relying on it being null-terminated.
-Use the `string` type from `common/str.h` whenever possible.
+Use the `string` type from `common/str.h` whenever possible, so that you do not need to remember this.
 
 ### Structs/Unions
 When declaring a struct or union type, use typedef and include the name in the definition twice:
@@ -155,7 +257,7 @@ typedef struct Token {
 ```
 
 ### Pointers
-Pointer types, in declarations and parameters, should have the `*` attached to the subtype:
+Pointer types, in declarations and parameters, should have the `*` attached to the base type:
 ```c
 int* xptr = &x;
 
@@ -163,6 +265,8 @@ void modify(int* ptr);
 ```
 
 ## Declarations & Assignments
+
+### Multiple declarations
 **Never** declare or assign more than one variable in a single statement.
 ```c
 // nuh uh
@@ -174,6 +278,7 @@ int y;
 int z = 1;
 ```
 
+### Readability
 Extract long expressions out to variables if they're commonly re-used.
 ```c
 // bad
@@ -191,15 +296,16 @@ if (rhs.type == lhs.type) {
 }
 ```
 
-## Headers
-Use `#ifdef` guards with the form:
-```
-#ifndef HEADERNAME_H
-#define HEADERNAME_H
+## General programming architecture and other miscellany
 
-// ...
+### Structure size
 
-#endif // HEADERNAME_H
-```
+Generally adhere to the principles of Data Oriented Design, and try to limit the size of your structures.
 
-Do not use `#pragma once`.
+### Check error states
+
+Always check a function's return value for error states!
+
+### Avoid raw allocations
+
+Avoid allocating raw with malloc, try to use arena allocation or the allocation schemes built into other data types (like Vec). This is not a strict rule, and more of a guideline.
