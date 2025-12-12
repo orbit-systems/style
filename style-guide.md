@@ -296,6 +296,10 @@ if (rhs.type == lhs.type) {
 }
 ```
 
+### Object linkage
+If an object is only used in that file, it should be marked static. 
+If an object is required to be used in other files, other files that require it should use extern to mark the object.
+
 ## General programming architecture and other miscellany
 
 ### Structure size
